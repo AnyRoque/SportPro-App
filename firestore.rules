@@ -1,0 +1,65 @@
+rules_version = '2';
+
+// Reglas de seguridad de SportPro (Cloud Firestore)
+// Implementan las reglas de privacidad por rol del Product Backlog.
+// Publicar en: Firebase Console > Firestore Database > Reglas
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function hasRole(r) { return signedIn() && me().role == r; }
+    function isAdmin() { return hasRole('ADM'); }
+
+    // ---------- Usuarios (US-01, US-06) ----------
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      // Registro público: solo DT, JUG o PAD. Nunca ADM.
+      allow create: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.role in ['DT', 'JUG', 'PAD'];
+      // El usuario no puede cambiar su propio rol ni reactivarse
+      allow update: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.active == resource.data.active;
+    }
+
+    // ---------- Equipos (US-03, US-07) ----------
+    match /teams/{teamId} {
+      allow read: if signedIn();
+      // El DT crea su equipo siempre en estado PENDIENTE y asignado a sí mismo
+      allow create: if hasRole('DT')
+                    && request.resource.data.dtUid == request.auth.uid
+                    && request.resource.data.status == 'PENDIENTE';
+      // El DT solo puede corregir y reenviar (vuelve a PENDIENTE); el ADM aprueba o rechaza
+      allow update: if isAdmin()
+                    || (hasRole('DT') && resource.data.dtUid == request.auth.uid
+                        && request.resource.data.status == 'PENDIENTE');
+    }
+
+    // ---------- Jugadores (US-02, US-04) ----------
+    match /players/{playerId} {
+      function isTeamDt() { return hasRole('DT') && resource.data.dtUid == request.auth.uid; }
+      function isParent() { return hasRole('PAD') && resource.data.parentUid == request.auth.uid; }
+      function isSelf()   { return hasRole('JUG') && resource.data.userUid == request.auth.uid; }
+
+      // Datos físicos y de contacto: solo DT del equipo, ADM, el propio jugador y su padre
+      allow read: if isAdmin() || isTeamDt() || isParent() || isSelf();
+
+      allow create: if
+        // DT registra manualmente en su equipo (vínculo aceptado)
+        (hasRole('DT') && request.resource.data.dtUid == request.auth.uid
+                       && request.resource.data.linkStatus == 'ACEPTADO')
+        // PAD registra a su hijo (vínculo pendiente hasta que el DT acepte)
+        || (hasRole('PAD') && request.resource.data.parentUid == request.auth.uid
+                           && request.resource.data.linkStatus == 'PENDIENTE');
+
+      allow update: if isAdmin() || isTeamDt();
+    }
+
+    // Índice de DNI único: se puede consultar si existe, pero no listar
+    match /dniIndex/{dni} {
+      allow get: if signedIn();
+      allow create: if signedIn();
+    }
+  }
+}

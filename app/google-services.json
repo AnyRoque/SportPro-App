@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "609312947120",
+    "project_id": "sportpro-73035",
+    "storage_bucket": "sportpro-73035.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:609312947120:android:fabc9f401e97f209a1f475",
+        "android_client_info": {
+          "package_name": "pe.edu.esan.sportpro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5Ox1nrMEqqfOZFbJKXh-ZHyH88Yk_vV4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
