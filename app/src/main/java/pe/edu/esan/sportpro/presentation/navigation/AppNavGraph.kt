@@ -22,10 +22,11 @@ import pe.edu.esan.sportpro.presentation.players.playersGraph
 import pe.edu.esan.sportpro.presentation.profile.ProfileScreen
 import pe.edu.esan.sportpro.presentation.teams.teamApprovalGraph
 import pe.edu.esan.sportpro.presentation.teams.teamsGraph
+import pe.edu.esan.sportpro.presentation.training.trainingGraph
 
 /**
  * Grafo principal. Cada módulo registra sus rutas en su propio archivo *Nav.kt
- * (authGraph, teamsGraph, teamApprovalGraph, playersGraph, childrenGraph).
+ * (authGraph, teamsGraph, teamApprovalGraph, playersGraph, childrenGraph, trainingGraph).
  */
 @Composable
 fun AppNavGraph() {
@@ -81,5 +82,6 @@ fun AppNavGraph() {
         teamsGraph(sec)                            // US-03
         playersGraph(sec)                          // US-04
         teamApprovalGraph(sec)                     // US-07
+        trainingGraph(sec)                         // US-11
     }
 }

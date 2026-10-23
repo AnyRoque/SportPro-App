@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
@@ -55,13 +57,15 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import pe.edu.esan.sportpro.MainActivity
 import pe.edu.esan.sportpro.data.remote.FirebaseAuthManager
+import pe.edu.esan.sportpro.presentation.teams.TeamApprovalScreen
 import pe.edu.esan.sportpro.ui.theme.SportProTheme
 
 /**
- * Pantalla de Panel de Administración (US-06).
+ * Pantalla de Panel de Administración (US-06 / US-07).
  * Estructurada visualmente en 2 cuadrantes/botones principales:
  * 1. "Gestionar APP" (Módulo inactivo con aviso "Próximamente")
  * 2. "Agregar Administrador" (Abre el formulario para registrar un nuevo admin)
+ * Y acceso directo a la Validación y Aprobación de Equipos Pendientes (US-07).
  */
 class AdminDashboardActivity : ComponentActivity() {
 
@@ -93,15 +97,38 @@ fun AdminDashboardContent(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var currentView by remember { mutableStateOf("DASHBOARD") } // "DASHBOARD" o "ADD_ADMIN"
+    var currentView by remember { mutableStateOf("DASHBOARD") } // "DASHBOARD", "ADD_ADMIN", "TEAM_APPROVAL"
 
     val adminEmail = FirebaseAuthManager.currentUserEmail ?: "michi@gmail.com"
+    val adminUid = FirebaseAuthManager.currentUid ?: adminEmail
 
     if (currentView == "ADD_ADMIN") {
         AddAdminScreen(
             creatorEmail = adminEmail,
             onBack = { currentView = "DASHBOARD" }
         )
+    } else if (currentView == "TEAM_APPROVAL") {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Validar Equipos Pendientes") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = { currentView = "DASHBOARD" }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            Box(modifier = Modifier.padding(paddingValues)) {
+                TeamApprovalScreen(adminUid = adminUid)
+            }
+        }
     } else {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -206,13 +233,10 @@ fun AdminDashboardContent(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Acceso complementario a Validación de Equipos si corresponde (US-07)
+                // Módulo de Validación de Equipos (US-07)
                 OutlinedButton(
                     onClick = {
-                        val intent = Intent(context, MainActivity::class.java).apply {
-                            putExtra("TARGET_ROUTE", "team_approval")
-                        }
-                        context.startActivity(intent)
+                        currentView = "TEAM_APPROVAL"
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

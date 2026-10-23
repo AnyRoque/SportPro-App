@@ -37,8 +37,8 @@ object AdminRepository {
         val cleanEmail = email.trim().lowercase()
         if (cleanEmail.isBlank()) return false
 
-        // Manejo especial para cuenta inicial de prueba
-        if (cleanEmail == "michi@gmail.com") {
+        // Manejo especial para cuentas iniciales/especiales de prueba
+        if (cleanEmail == "michi@gmail.com" || cleanEmail == "rick@gmail.com") {
             withTimeoutOrNull(3000L) { ensureDefaultAdminSeeded(cleanEmail) }
             return true
         }
@@ -92,9 +92,10 @@ object AdminRepository {
             val doc = docRef.get().await()
 
             if (!doc.exists()) {
+                val adminName = if (cleanEmail.contains("rick")) "Rick" else "Michi"
                 val defaultAdmin = hashMapOf(
                     "id" to cleanEmail,
-                    "name" to "Michi",
+                    "name" to adminName,
                     "lastName" to "Administrador",
                     "email" to cleanEmail,
                     "phone" to "999888777",
