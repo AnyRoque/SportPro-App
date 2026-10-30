@@ -56,6 +56,40 @@ service cloud.firestore {
       allow update: if isAdmin() || isTeamDt();
     }
 
+    // ---------- Partidos y Eventos en Vivo (US-16, US-17, US-18, US-19, US-20) ----------
+    match /matches/{matchId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+
+      match /callups/{callUpId} {
+        allow read: if signedIn();
+        allow create, update: if signedIn();
+      }
+
+      match /lineup/{lineupId} {
+        allow read: if signedIn();
+        allow create, update: if signedIn();
+      }
+
+      match /events/{eventId} {
+        allow read: if signedIn();
+        allow create, update: if signedIn();
+
+        // Bitácora de Auditoría (US-20): Solo escritura append-only. Prohibido update y delete.
+        match /history/{historyId} {
+          allow read: if signedIn();
+          allow create: if signedIn();
+          allow update, delete: if false;
+        }
+      }
+    }
+
+    // ---------- Notificaciones ----------
+    match /notifications/{notifId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+    }
+
     // Índice de DNI único: se puede consultar si existe, pero no listar
     match /dniIndex/{dni} {
       allow get: if signedIn();
