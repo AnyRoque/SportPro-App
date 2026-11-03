@@ -1,3 +1,109 @@
 <resources>
     <string name="app_name">SportPro</string>
+
+    <!-- Partidos (US-16) -->
+    <string name="match_nav_title">Partidos</string>
+    <string name="match_list_title">Partidos Programados</string>
+    <string name="match_form_new_title">Programar Partido</string>
+    <string name="match_form_edit_title">Editar Partido</string>
+    <string name="match_detail_title">Detalle del Partido</string>
+    <string name="match_team_label">Equipo</string>
+    <string name="match_rival_label">Equipo Rival</string>
+    <string name="match_type_label">Tipo de Partido</string>
+    <string name="match_operator_label">Operador de Registro</string>
+    <string name="match_condition_label">Condición</string>
+    <string name="match_modality_label">Modalidad</string>
+    <string name="match_date_label">Fecha del partido</string>
+    <string name="match_time_label">Hora de inicio</string>
+    <string name="match_period_minutes_label">Duración por tiempo (minutos)</string>
+    <string name="match_location_label">Cancha / Ubicación</string>
+    <string name="match_notes_label">Observaciones / Notas</string>
+    <string name="match_save_button">Guardar Partido</string>
+    <string name="match_edit_button">Editar</string>
+    <string name="match_cancel_button">Cancelar Partido</string>
+    <string name="match_empty_list">No hay partidos registrados para este equipo.</string>
+    <string name="match_select_team">Selecciona un equipo</string>
+    <string name="match_status_programmed">Programado</string>
+    <string name="match_status_in_progress">En Curso</string>
+    <string name="match_status_finished">Finalizado</string>
+    <string name="match_status_canceled">Cancelado</string>
+    <string name="match_local">Local</string>
+    <string name="match_visitor">Visitante</string>
+    <string name="match_f7">Fútbol 7</string>
+    <string name="match_f9">Fútbol 9</string>
+    <string name="match_f11">Fútbol 11</string>
+    <string name="match_cancel_reason_title">Motivo de cancelación</string>
+    <string name="match_cancel_confirm">Confirmar Cancelación</string>
+    <string name="match_category_label">Categoría: %1$s</string>
+    <string name="match_score_label">Marcador: %1$d - %2$d</string>
+    <string name="match_info_title">Información del Encuentro</string>
+    <string name="match_date_time_label">Fecha y Hora</string>
+    <string name="match_location_title">Ubicación</string>
+    <string name="match_period_duration_title">Duración por tiempo</string>
+    <string name="match_period_duration_value">%1$d min por tiempo (%2$d min total aprox.)</string>
+    <string name="match_cancel_reason_label">Motivo de Cancelación</string>
+    <string name="match_notes_title">Observaciones</string>
+    <string name="match_not_found">Partido no encontrado</string>
+    <string name="match_error_past_datetime">La fecha y hora deben ser posteriores a la actual</string>
+    <string name="match_error_rival_required">Ingresa el nombre del equipo rival</string>
+    <string name="match_error_location_required">Ingresa la ubicación o cancha</string>
+    <string name="match_error_date_required">Selecciona la fecha del partido</string>
+    <string name="match_error_time_required">Ingresa la hora de inicio</string>
+    <string name="match_error_team_required">Selecciona un equipo</string>
+
+    <!-- Convocatoria y Disponibilidad (US-17) -->
+    <string name="callup_nav_title">Convocatoria</string>
+    <string name="callup_form_title">Nueva Convocatoria</string>
+    <string name="callup_add_players_title">Agregar Jugadores a Convocatoria</string>
+    <string name="callup_panel_title">Panel de Convocatoria</string>
+    <string name="callup_select_players">Seleccionar Jugadores</string>
+    <string name="callup_select_all">Seleccionar Todos</string>
+    <string name="callup_min_required">Mínimo requerido para Fútbol %1$d: %1$d jugadores</string>
+    <string name="callup_deadline_date">Fecha límite de respuesta</string>
+    <string name="callup_deadline_time">Hora límite de respuesta</string>
+    <string name="callup_button_submit">Convocar Jugadores</string>
+    <string name="callup_button_resend_reminders">Reenviar Recordatorio</string>
+    <string name="callup_button_add_players">Agregar Jugadores</string>
+    <string name="callup_count_confirmed">Confirmados</string>
+    <string name="callup_count_rejected">Rechazados</string>
+    <string name="callup_count_pending">Pendientes</string>
+    <string name="callup_count_no_response">Sin Respuesta</string>
+    <string name="callup_action_confirm">Confirmar</string>
+    <string name="callup_action_reject">Rechazar</string>
+    <string name="callup_reject_dialog_title">Motivo de Inasistencia</string>
+    <string name="callup_reject_reason_label">Motivo de rechazo</string>
+    <string name="callup_reject_comment_label">Comentario adicional (opcional)</string>
+    <string name="callup_response_change">Cambiar Respuesta</string>
+    <string name="callup_expired_notice">La fecha límite de respuesta ha vencido.</string>
+
+    <!-- Inicio y Flujo de Registro de Nuevos Jugadores -->
+    <string name="home_matches_shortcut_title">Partidos y Convocatorias</string>
+    <string name="home_matches_shortcut_subtitle">Consulta programaciones, responde convocatorias y revisa alineaciones</string>
+    <string name="match_new_pad_prompt">Para ver las convocatorias de tu hijo, debes registrarlo e inscribirlo en un equipo.</string>
+    <string name="match_new_pad_action">Registrar a mi hijo</string>
+    <string name="match_new_jug_prompt">Para ver tus convocatorias, tu Director Técnico (DT) o tu Padre/Apoderado debe inscribirte en tu equipo.</string>
+
+    <!-- Alineación Táctica (US-18) -->
+    <string name="lineup_title">Alineación Táctica</string>
+    <string name="lineup_formation_label">Formación táctica</string>
+    <string name="lineup_starting_xi">Titulares (Fútbol %1$d)</string>
+    <string name="lineup_substitutes_title">Suplentes (Banca)</string>
+    <string name="lineup_no_substitutes">No hay jugadores suplentes.</string>
+    <string name="lineup_save_button">Guardar Alineación</string>
+    <string name="lineup_assign_dialog_title">Asignar jugador a %1$s</string>
+
+    <!-- Registro de Eventos en Tiempo Real (US-19) -->
+    <string name="console_title">Consola de Registro en Vivo</string>
+    <string name="console_no_lineup_error">El partido requiere una alineación guardada para poder iniciar la consola de registro.</string>
+    <string name="console_access_denied">Solo el Director Técnico o el operador asignado pueden registrar eventos en vivo.</string>
+    <string name="console_start_match">Iniciar Partido</string>
+    <string name="console_pause">Pausar Cronómetro</string>
+    <string name="console_resume">Reanudar Cronómetro</string>
+    <string name="console_end_first_half">Fin 1° Tiempo</string>
+    <string name="console_start_second_half">Iniciar 2° Tiempo</string>
+    <string name="console_finish_match">Finalizar Partido</string>
+    <string name="console_events_title">Eventos del Partido</string>
+    <string name="console_timeline_title">Línea de Tiempo del Partido</string>
+    <string name="console_pending_sync">Pendiente de sincronizar</string>
+    <string name="console_corrected_minute">Minuto corregido</string>
 </resources>

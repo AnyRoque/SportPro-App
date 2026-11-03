@@ -1,30 +1,37 @@
 package pe.edu.esan.sportpro.presentation.navigation
 
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import pe.edu.esan.sportpro.data.model.Role
+import pe.edu.esan.sportpro.presentation.admin.AdminDashboardActivity
+import pe.edu.esan.sportpro.presentation.admin.AdminDashboardContent
 import pe.edu.esan.sportpro.presentation.auth.AuthViewModel
 import pe.edu.esan.sportpro.presentation.auth.authGraph
 import pe.edu.esan.sportpro.presentation.children.childrenGraph
 import pe.edu.esan.sportpro.presentation.components.LoadingBox
 import pe.edu.esan.sportpro.presentation.home.HomeScreen
+import pe.edu.esan.sportpro.presentation.matches.matchesGraph
 import pe.edu.esan.sportpro.presentation.players.playersGraph
 import pe.edu.esan.sportpro.presentation.profile.ProfileScreen
 import pe.edu.esan.sportpro.presentation.teams.teamApprovalGraph
 import pe.edu.esan.sportpro.presentation.teams.teamsGraph
+import pe.edu.esan.sportpro.presentation.training.trainingGraph
 
 /**
  * Grafo principal. Cada módulo registra sus rutas en su propio archivo *Nav.kt
- * (authGraph, teamsGraph, teamApprovalGraph, playersGraph, childrenGraph).
+ * (authGraph, teamsGraph, teamApprovalGraph, playersGraph, childrenGraph, trainingGraph).
  */
 @Composable
 fun AppNavGraph() {
+    val context = LocalContext.current
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
     val session by authViewModel.session.collectAsState()
@@ -38,9 +45,17 @@ fun AppNavGraph() {
         if (user == null) {
             if (current !in Routes.authRoutes || current == Routes.SPLASH) navController.clearAndGo(Routes.LOGIN)
         } else if (current in Routes.authRoutes) {
-            navController.clearAndGo(Routes.HOME)
-            if (session.justRegistered && user.roleEnum == Role.PAD) navController.navigate(Routes.CHILD_FORM)
-            authViewModel.consumeJustRegistered()
+            if (user.roleEnum == Role.ADM) {
+                // Redirección al Panel de Administración (AdminDashboardActivity)
+                val intent = Intent(context, AdminDashboardActivity::class.java)
+                context.startActivity(intent)
+                navController.clearAndGo(Routes.ADMIN_DASHBOARD)
+            } else {
+                // Redirección para usuarios comunes (sin alterar lógica existente)
+                navController.clearAndGo(Routes.HOME)
+                if (session.justRegistered && user.roleEnum == Role.PAD) navController.navigate(Routes.CHILD_FORM)
+                authViewModel.consumeJustRegistered()
+            }
         }
     }
 
@@ -55,11 +70,20 @@ fun AppNavGraph() {
             sec.Secured("Mi perfil") { u -> ProfileScreen(u, onLogout = { authViewModel.logout() }) }
         }
 
+        // ADM – Panel de Administración
+        composable(Routes.ADMIN_DASHBOARD) {
+            sec.Secured("Panel de Administración", allowed = setOf(Role.ADM)) {
+                AdminDashboardContent(onLogout = { authViewModel.logout() })
+            }
+        }
+
         // Módulos
         authGraph(navController, authViewModel)   // US-01
         childrenGraph(sec)                         // US-02
         teamsGraph(sec)                            // US-03
         playersGraph(sec)                          // US-04
         teamApprovalGraph(sec)                     // US-07
+        trainingGraph(sec)                         // US-11
+        matchesGraph(sec)                          // US-16
     }
 }

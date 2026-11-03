@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -37,17 +38,22 @@ import kotlinx.coroutines.launch
 import pe.edu.esan.sportpro.data.model.Role
 import pe.edu.esan.sportpro.data.model.UserModel
 
+import androidx.compose.material.icons.filled.DateRange
+
 private data class DrawerItem(val label: String, val route: String, val icon: ImageVector)
 
 /** Cada rol ve únicamente las opciones para las que tiene autorización (US-01). */
 private fun drawerItemsFor(role: Role?): List<DrawerItem> {
     val home = DrawerItem("Inicio", Routes.HOME, Icons.Default.Home)
     val profile = DrawerItem("Mi perfil", Routes.PROFILE, Icons.Default.Person)
+    val trainings = DrawerItem("Entrenamientos", Routes.TRAININGS, Icons.Default.DateRange)
+    val matches = DrawerItem("Partidos", Routes.MATCHES, Icons.Default.Place)
+    val myAttendance = DrawerItem("Mi asistencia", Routes.USER_ATTENDANCE_HISTORY, Icons.Default.CheckCircle)
     return when (role) {
         Role.ADM -> listOf(home, DrawerItem("Validar equipos", Routes.TEAM_APPROVAL, Icons.Default.CheckCircle), profile)
-        Role.DT -> listOf(home, DrawerItem("Mis equipos", Routes.MY_TEAMS, Icons.AutoMirrored.Filled.List), profile)
-        Role.PAD -> listOf(home, DrawerItem("Mis hijos", Routes.MY_CHILDREN, Icons.Default.Face), profile)
-        Role.JUG -> listOf(home, profile)
+        Role.DT -> listOf(home, DrawerItem("Mis equipos", Routes.MY_TEAMS, Icons.AutoMirrored.Filled.List), trainings, matches, profile)
+        Role.PAD -> listOf(home, DrawerItem("Mis hijos", Routes.MY_CHILDREN, Icons.Default.Face), trainings, matches, myAttendance, profile)
+        Role.JUG -> listOf(home, trainings, matches, myAttendance, profile)
         null -> listOf(home)
     }
 }

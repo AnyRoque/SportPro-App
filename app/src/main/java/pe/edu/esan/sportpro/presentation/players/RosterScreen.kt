@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
@@ -28,17 +31,20 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pe.edu.esan.sportpro.data.model.Catalogs
@@ -60,6 +66,7 @@ fun RosterScreen(
     val s by viewModel.state.collectAsState()
     val context = LocalContext.current
     var tab by remember { mutableIntStateOf(0) }
+    var showUserSearchDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(teamId) { viewModel.start(teamId, dtUid) }
     LaunchedEffect(s.message) {
@@ -89,6 +96,17 @@ fun RosterScreen(
                     DropdownField("Posición", listOf("Todas") + Catalogs.positions, s.positionFilter,
                         viewModel::onPositionFilter, modifier = Modifier.weight(1f))
                 }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    OutlinedButton(onClick = { showUserSearchDialog = true }) {
+                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.padding(end = 4.dp))
+                        Text("Vincular por correo")
+                    }
+                }
+
                 if (s.roster.isEmpty()) EmptyState("No hay jugadores en el plantel")
                 else LazyColumn(
                     contentPadding = PaddingValues(16.dp, 0.dp, 16.dp, 96.dp),
@@ -121,6 +139,53 @@ fun RosterScreen(
             }
         }
     }
+
+    if (showUserSearchDialog) {
+        SearchUserDialog(
+            onConfirm = { email ->
+                viewModel.addRegisteredUserByEmail(email, dtUid)
+                showUserSearchDialog = false
+            },
+            onDismiss = { showUserSearchDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun SearchUserDialog(
+    onConfirm: (email: String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var email by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Agregar usuario registrado al equipo") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Ingresa el correo electrónico del usuario (Jugador o Padre) registrado en la plataforma:")
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Correo electrónico") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(email.trim()) },
+                enabled = email.trim().isNotBlank()
+            ) {
+                Text("Agregar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 @Composable
