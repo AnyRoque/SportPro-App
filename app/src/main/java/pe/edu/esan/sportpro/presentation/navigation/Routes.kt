@@ -9,8 +9,9 @@ object Routes {
     const val HOME = "home"
     const val PROFILE = "profile"
 
-    // DT – equipos (US-03)
+    // DT / JUG / PAD – equipos (US-03 / US-02 / US-04)
     const val MY_TEAMS = "my_teams"
+    const val JOIN_TEAM = "join_team"
     const val TEAM_FORM = "team_form?teamId={teamId}"
     fun teamForm(teamId: String? = null) = if (teamId == null) "team_form" else "team_form?teamId=$teamId"
 
@@ -50,6 +51,31 @@ object Routes {
 
     // JUG / PAD – Consulta de Historial de Asistencia Personal (US-14)
     const val USER_ATTENDANCE_HISTORY = "user_attendance_history"
+
+    // DT / JUG / PAD – Partidos (US-16)
+    const val MATCHES = "matches"
+    const val MATCH_FORM = "match_form?matchId={matchId}"
+    fun matchForm(matchId: String? = null) = if (matchId == null) "match_form" else "match_form?matchId=$matchId"
+    const val MATCH_DETAIL = "match_detail/{matchId}"
+    fun matchDetail(matchId: String) = "match_detail/$matchId"
+
+    // DT / JUG / PAD – Convocatoria y Disponibilidad (US-17)
+    const val CALL_UP_FORM = "call_up_form/{matchId}?isAdding={isAdding}"
+    fun callUpForm(matchId: String, isAdding: Boolean = false) = "call_up_form/$matchId?isAdding=$isAdding"
+    const val CALL_UP_PANEL = "call_up_panel/{matchId}"
+    fun callUpPanel(matchId: String) = "call_up_panel/$matchId"
+
+    // DT / JUG / PAD – Alineación Táctica (US-18)
+    const val LINEUP = "lineup/{matchId}"
+    fun lineup(matchId: String) = "lineup/$matchId"
+
+    // DT / Operador – Consola de Registro en Vivo (US-19)
+    const val MATCH_CONSOLE = "match_console/{matchId}"
+    fun matchConsole(matchId: String) = "match_console/$matchId"
+
+    // DT / JUG / PAD – Partido en Vivo Sin Recarga (US-21)
+    const val LIVE_MATCH = "live_match/{matchId}"
+    fun liveMatch(matchId: String) = "live_match/$matchId"
 
     val authRoutes = setOf(SPLASH, LOGIN, REGISTER, FORGOT_PASSWORD)
 }

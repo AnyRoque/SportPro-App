@@ -14,19 +14,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,7 +41,6 @@ import pe.edu.esan.sportpro.ui.theme.StatusRejected
 /**
  * Consulta del Historial de Asistencias Pasadas ordenadas por Sesión de Entrenamiento (US-13).
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AttendanceHistoryScreen(
     user: UserModel,
@@ -60,46 +53,27 @@ fun AttendanceHistoryScreen(
     }
     val records by historyFlow.collectAsState(initial = emptyList())
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Historial de Asistencias") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        if (records.isEmpty()) {
+            EmptyState(
+                message = "No hay registros de asistencias pasadas para este equipo.",
+                modifier = Modifier.weight(1f)
             )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            if (records.isEmpty()) {
-                EmptyState(
-                    message = "No hay registros de asistencias pasadas para este equipo.",
-                    modifier = Modifier.weight(1f)
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(records, key = { it.id }) { record ->
-                        AttendanceRecordCard(
-                            record = record,
-                            isDt = user.roleEnum == Role.DT,
-                            onEdit = { onNavigateAttendance(record.trainingId) }
-                        )
-                    }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(records, key = { it.id }) { record ->
+                    AttendanceRecordCard(
+                        record = record,
+                        isDt = user.roleEnum == Role.DT,
+                        onEdit = { onNavigateAttendance(record.trainingId) }
+                    )
                 }
             }
         }

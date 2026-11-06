@@ -106,8 +106,12 @@ object FirebaseAuthManager {
             val isAdmin = email.isNotBlank() && AdminRepository.isAdminAuthorized(email)
 
             // 2. Intentar consultar documento en Firestore users/{uid}
-            val doc = firestore.collection(USERS).document(uid).get().await()
-            val existingUser = doc.toObject(UserModel::class.java)
+            val doc = try {
+                firestore.collection(USERS).document(uid).get().await()
+            } catch (_: Exception) {
+                null
+            }
+            val existingUser = doc?.toObject(UserModel::class.java)
 
             if (existingUser != null) {
                 if (!existingUser.active) {

@@ -14,9 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -25,12 +23,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -38,15 +34,12 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,7 +60,6 @@ import java.util.UUID
 /**
  * Formulario para crear, editar o duplicar una Sesión de Entrenamiento (US-11).
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainingFormScreen(
     user: UserModel,
@@ -85,255 +77,228 @@ fun TrainingFormScreen(
         viewModel.loadForm(dtUid = user.uid, trainingId = trainingId, duplicateFromId = duplicateFromId)
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        when {
-                            state.isDuplicate -> "Duplicar Entrenamiento"
-                            state.id.isNotBlank() -> "Editar Entrenamiento"
-                            else -> "Planificar Entrenamiento"
-                        }
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        if (state.loading) {
-            LoadingBox()
-            return@Scaffold
-        }
+    if (state.loading) {
+        LoadingBox()
+        return
+    }
 
-        if (state.approvedTeams.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = state.errorMessage ?: "No cuentas con ningún equipo en estado 'APROBADO'. No es posible planificar entrenamientos.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = onBack) {
-                    Text("Volver")
-                }
-            }
-            return@Scaffold
-        }
-
+    if (state.approvedTeams.isEmpty()) {
         Column(
             modifier = Modifier
-                .padding(paddingValues)
                 .fillMaxSize()
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SectionTitle("1. Datos Generales del Entrenamiento")
+            Text(
+                text = state.errorMessage ?: "No cuentas con ningún equipo en estado 'APROBADO'. No es posible planificar entrenamientos.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onBack) {
+                Text("Volver")
+            }
+        }
+        return
+    }
 
-            // Selección de Equipo / Categoría
-            val teamOptions = state.approvedTeams.map { "${it.name} (${it.category})" }
-            val selectedTeamLabel = state.team?.let { "${it.name} (${it.category})" } ?: teamOptions.first()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start
+    ) {
+        SectionTitle("1. Datos Generales del Entrenamiento")
 
-            DropdownField(
-                label = "Equipo / Categoría",
-                options = teamOptions,
-                selected = selectedTeamLabel,
-                onSelected = { label ->
-                    val chosen = state.approvedTeams.find { "${it.name} (${it.category})" == label }
-                    if (chosen != null) viewModel.onTeamSelected(chosen)
+        // Selección de Equipo / Categoría
+        val teamOptions = state.approvedTeams.map { "${it.name} (${it.category})" }
+        val selectedTeamLabel = state.team?.let { "${it.name} (${it.category})" } ?: teamOptions.first()
+
+        DropdownField(
+            label = "Equipo / Categoría",
+            options = teamOptions,
+            selected = selectedTeamLabel,
+            onSelected = { label ->
+                val chosen = state.approvedTeams.find { "${it.name} (${it.category})" == label }
+                if (chosen != null) viewModel.onTeamSelected(chosen)
+            },
+            error = state.fieldErrors["team"]
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Selector de Fecha (Validado que no sea anterior a hoy)
+        DateField(
+            label = "Fecha de la Sesión",
+            value = state.date,
+            onValueChange = { viewModel.onDateChanged(it) },
+            error = state.fieldErrors["date"]
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FormTextField(
+                value = state.startTime,
+                onValueChange = { viewModel.onTimeChanged(it) },
+                label = "Hora de inicio (HH:mm)",
+                modifier = Modifier.weight(1f),
+                error = state.fieldErrors["time"]
+            )
+
+            FormTextField(
+                value = state.durationMinutes.toString(),
+                onValueChange = { input ->
+                    val mins = input.filter { it.isDigit() }.toIntOrNull() ?: 0
+                    viewModel.onDurationChanged(mins)
                 },
-                error = state.fieldErrors["team"]
+                label = "Duración total (min)",
+                keyboardType = KeyboardType.Number,
+                modifier = Modifier.weight(1f)
             )
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-            // Selector de Fecha (Validado que no sea anterior a hoy)
-            DateField(
-                label = "Fecha de la Sesión",
-                value = state.date,
-                onValueChange = { viewModel.onDateChanged(it) },
-                error = state.fieldErrors["date"]
-            )
+        FormTextField(
+            value = state.location,
+            onValueChange = { viewModel.onLocationChanged(it) },
+            label = "Lugar de entrenamiento",
+            error = state.fieldErrors["location"]
+        )
 
-            Spacer(modifier = Modifier.height(12.dp))
+        SectionTitle("2. Objetivos de la Sesión")
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                FormTextField(
-                    value = state.startTime,
-                    onValueChange = { viewModel.onTimeChanged(it) },
-                    label = "Hora de inicio (HH:mm)",
-                    modifier = Modifier.weight(1f),
-                    error = state.fieldErrors["time"]
-                )
+        DropdownField(
+            label = "Clasificación de Objetivo",
+            options = ObjectiveType.ALL,
+            selected = state.objectiveType,
+            onSelected = { viewModel.onObjectiveTypeChanged(it) }
+        )
 
-                FormTextField(
-                    value = state.durationMinutes.toString(),
-                    onValueChange = { input ->
-                        val mins = input.filter { it.isDigit() }.toIntOrNull() ?: 0
-                        viewModel.onDurationChanged(mins)
-                    },
-                    label = "Duración total (min)",
-                    keyboardType = KeyboardType.Number,
-                    modifier = Modifier.weight(1f)
+        Spacer(modifier = Modifier.height(12.dp))
+
+        FormTextField(
+            value = state.objectiveDescription,
+            onValueChange = { viewModel.onObjectiveDescriptionChanged(it) },
+            label = "Descripción detallada del objetivo",
+            singleLine = false,
+            error = state.fieldErrors["objective"]
+        )
+
+        SectionTitle("3. Lista de Ejercicios Planificados")
+
+        val totalExerciseDuration = state.exercises.sumOf { it.durationMinutes }
+        val isExceeded = totalExerciseDuration > state.durationMinutes
+
+        Surface(
+            color = if (isExceeded) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Duración planificada: $totalExerciseDuration / ${state.durationMinutes} min",
+                    fontWeight = FontWeight.Bold,
+                    color = if (isExceeded) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            FormTextField(
-                value = state.location,
-                onValueChange = { viewModel.onLocationChanged(it) },
-                label = "Lugar de entrenamiento",
-                error = state.fieldErrors["location"]
+        state.fieldErrors["exercises"]?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
+        }
 
-            SectionTitle("2. Objetivos de la Sesión")
-
-            DropdownField(
-                label = "Clasificación de Objetivo",
-                options = ObjectiveType.ALL,
-                selected = state.objectiveType,
-                onSelected = { viewModel.onObjectiveTypeChanged(it) }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            FormTextField(
-                value = state.objectiveDescription,
-                onValueChange = { viewModel.onObjectiveDescriptionChanged(it) },
-                label = "Descripción detallada del objetivo",
-                singleLine = false,
-                error = state.fieldErrors["objective"]
-            )
-
-            SectionTitle("3. Lista de Ejercicios Planificados")
-
-            val totalExerciseDuration = state.exercises.sumOf { it.durationMinutes }
-            val isExceeded = totalExerciseDuration > state.durationMinutes
-
-            Surface(
-                color = if (isExceeded) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+        // Lista de ejercicios agregados con reordenamiento
+        state.exercises.forEachIndexed { index, exercise ->
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Row(
                     modifier = Modifier.padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Duración planificada: $totalExerciseDuration / ${state.durationMinutes} min",
-                        fontWeight = FontWeight.Bold,
-                        color = if (isExceeded) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "${index + 1}. ${exercise.name} (${exercise.durationMinutes} min)",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = exercise.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
-            state.fieldErrors["exercises"]?.let {
-                Text(
-                    text = it,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
-            // Lista de ejercicios agregados con reordenamiento
-            state.exercises.forEachIndexed { index, exercise ->
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "${index + 1}. ${exercise.name} (${exercise.durationMinutes} min)",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                text = exercise.description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        // Botones de Reordenamiento Subir/Bajar
-                        IconButton(onClick = { viewModel.moveExercise(index, true) }, enabled = index > 0) {
-                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Subir")
-                        }
-                        IconButton(onClick = { viewModel.moveExercise(index, false) }, enabled = index < state.exercises.lastIndex) {
-                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Bajar")
-                        }
-                        IconButton(onClick = { viewModel.removeExercise(exercise.id) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
-                        }
+                    // Botones de Reordenamiento Subir/Bajar
+                    IconButton(onClick = { viewModel.moveExercise(index, true) }, enabled = index > 0) {
+                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Subir")
+                    }
+                    IconButton(onClick = { viewModel.moveExercise(index, false) }, enabled = index < state.exercises.lastIndex) {
+                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Bajar")
+                    }
+                    IconButton(onClick = { viewModel.removeExercise(exercise.id) }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedButton(
-                onClick = { showAddExerciseDialog = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Agregar Ejercicio a la Lista")
-            }
+        OutlinedButton(
+            onClick = { showAddExerciseDialog = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Agregar Ejercicio a la Lista")
+        }
 
-            Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
-            state.errorMessage?.let {
-                Text(
-                    text = it,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(bottom = 8.dp)
+        state.errorMessage?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+
+        Button(
+            onClick = {
+                viewModel.saveTraining(user, onSuccess = onBack)
+            },
+            enabled = !state.saving,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (state.saving) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
-            }
-
-            Button(
-                onClick = {
-                    viewModel.saveTraining(user, onSuccess = onBack)
-                },
-                enabled = !state.saving,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (state.saving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text("Guardar Sesión de Entrenamiento", fontWeight = FontWeight.Bold)
-                }
+            } else {
+                Text("Guardar Sesión de Entrenamiento", fontWeight = FontWeight.Bold)
             }
         }
+
+        SnackbarHost(snackbarHostState)
     }
 
     if (showAddExerciseDialog) {

@@ -68,5 +68,27 @@ class RosterViewModel : ViewModel() {
             .onFailure { e -> _state.update { it.copy(message = e.message) } }
     }
 
+    fun addRegisteredUserByEmail(email: String, dtUid: String) {
+        val t = _state.value.team ?: return
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true) }
+            val findRes = PlayerRepository.findRegisteredUserByEmail(email)
+            findRes.onSuccess { user ->
+                if (user == null) {
+                    _state.update { it.copy(loading = false, message = "No se encontró ningún usuario con el correo '$email'") }
+                } else {
+                    val addRes = PlayerRepository.addRegisteredUserToTeam(user, t.id, t.name, dtUid)
+                    addRes.onSuccess {
+                        _state.update { it.copy(loading = false, message = "${user.fullName} agregado al plantel") }
+                    }.onFailure { e ->
+                        _state.update { it.copy(loading = false, message = e.message) }
+                    }
+                }
+            }.onFailure { e ->
+                _state.update { it.copy(loading = false, message = e.message) }
+            }
+        }
+    }
+
     fun clearMessage() = _state.update { it.copy(message = null) }
 }
