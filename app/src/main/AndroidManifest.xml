@@ -25,6 +25,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".presentation.admin.AdminDashboardActivity"
+            android:exported="false"
+            android:label="Panel de Administración"
+            android:theme="@style/Theme.SportPro" />
     </application>
 
 </manifest>
