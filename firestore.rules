@@ -6,60 +6,67 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() { return request.auth != null; }
-
-    // ---------- Administradores Autorizados ----------
-    match /Admins/{adminId} {
-      allow read, write: if signedIn();
-    }
-    match /Administradores/{adminId} {
-      allow read, write: if signedIn();
-    }
+    function myDoc() { return /databases/$(database)/documents/users/$(request.auth.uid); }
+    function role() { return exists(myDoc()) ? get(myDoc()).data.role : ''; }
+    function isAdmin() { return signedIn() && role() == 'ADM'; }
+    function isDt() { return signedIn() && role() == 'DT'; }
 
     // ---------- Usuarios (US-01, US-06) ----------
     match /users/{uid} {
-      allow read, create, update: if signedIn();
+      allow read: if signedIn();
+      // Registro público: solo DT, JUG o PAD. El ADM solo lo crea otro ADM (US-06).
+      allow create: if (signedIn() && request.auth.uid == uid
+                        && request.resource.data.role in ['DT', 'JUG', 'PAD'])
+                    || isAdmin();
+      // Nadie puede cambiar su propio rol ni reactivarse
+      allow update: if (signedIn() && request.auth.uid == uid
+                        && request.resource.data.role == resource.data.role
+                        && request.resource.data.active == resource.data.active)
+                    || isAdmin();
+      allow delete: if false;
+    }
+
+    // ---------- Administradores (US-06): solo ADM ----------
+    match /Admins/{adminId} {
+      allow read, write: if isAdmin();
     }
 
     // ---------- Equipos (US-03, US-07) ----------
     match /teams/{teamId} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if signedIn();
+      allow create: if isDt()
+                    && request.resource.data.dtUid == request.auth.uid
+                    && request.resource.data.status == 'PENDIENTE';
+      // El DT edita su equipo sin poder aprobarlo; el ADM aprueba o rechaza
+      allow update: if isAdmin()
+                    || (isDt() && resource.data.dtUid == request.auth.uid
+                        && (request.resource.data.status == resource.data.status
+                            || request.resource.data.status == 'PENDIENTE'));
+      allow delete: if isAdmin();
     }
 
-    // ---------- Jugadores (US-02, US-04) ----------
-    match /players/{playerId} {
-      allow read, create, update, delete: if signedIn();
-    }
-
-    // ---------- Partidos y Eventos en Vivo (US-16 a US-21) ----------
+    // ---------- Partidos y eventos en vivo (US-16 a US-21) ----------
     match /matches/{matchId} {
-      allow read, create, update, delete: if signedIn();
-
-      match /callups/{callUpId} {
-        allow read, create, update, delete: if signedIn();
-      }
-
-      match /lineup/{lineupId} {
-        allow read, create, update, delete: if signedIn();
-      }
-
+      allow read, write: if signedIn();
+      match /callups/{callUpId} { allow read, write: if signedIn(); }
+      match /lineup/{lineupId} { allow read, write: if signedIn(); }
       match /events/{eventId} {
-        allow read, create, update, delete: if signedIn();
-
+        allow read, create, update: if signedIn();
+        allow delete: if false;   // los eventos se anulan, no se borran (US-20)
         match /history/{historyId} {
           allow read, create: if signedIn();
-          allow update, delete: if false;
+          allow update, delete: if false;   // bitácora inmutable
         }
       }
     }
 
-    // ---------- Notificaciones ----------
-    match /notifications/{notifId} {
-      allow read, create, update, delete: if signedIn();
-    }
-
-    // ---------- Índice de DNI ----------
-    match /dniIndex/{dni} {
-      allow read, get, create, update: if signedIn();
+    // ---------- Jugadores, entrenamientos y notificaciones ----------
+    // Requieren sesión. Pendiente: restringir por rol en la siguiente iteración.
+    match /{col}/{docId=**} {
+      allow read, write: if signedIn() && col in [
+        'players', 'dniIndex', 'trainings', 'attendance', 'attendanceHistory',
+        'notifications', 'eventCancellationRequests'
+      ];
     }
   }
 }

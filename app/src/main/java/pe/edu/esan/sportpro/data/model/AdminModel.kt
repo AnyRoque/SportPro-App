@@ -3,7 +3,7 @@ package pe.edu.esan.sportpro.data.model
 import com.google.firebase.firestore.Exclude
 
 /**
- * Modelo para la colección de Administradores Autorizados ("Admins" / "Administradores").
+ * Modelo para la colección de Administradores Autorizados ("Admins").
  */
 data class AdminModel(
     val id: String = "",

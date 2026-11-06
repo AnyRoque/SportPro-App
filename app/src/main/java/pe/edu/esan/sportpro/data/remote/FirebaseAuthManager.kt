@@ -43,13 +43,6 @@ object FirebaseAuthManager {
             )
             firestore.collection(USERS).document(uid).set(savedUser).await()
 
-            // 3. Si el correo estaba en la lista de administradores autorizados, asegurar rol ADM
-            if (AdminRepository.isAdminAuthorized(cleanEmail)) {
-                val adminSaved = savedUser.copy(role = Role.ADM.name)
-                firestore.collection(USERS).document(uid).set(adminSaved).await()
-                return Result.success(adminSaved)
-            }
-
             Result.success(savedUser)
         } catch (e: FirebaseAuthUserCollisionException) {
             Result.failure(Exception("El correo ya está registrado"))
@@ -63,22 +56,6 @@ object FirebaseAuthManager {
      */
     suspend fun loginUser(email: String, password: String): Result<UserModel> {
         val cleanEmail = email.trim().lowercase()
-
-        // REGLA DE ACCESO ESPECIAL: Rick Administrador
-        if (cleanEmail == "rick@gmail.com" && password.trim() == "1234567890A") {
-            AdminRepository.ensureDefaultAdminSeeded("rick@gmail.com")
-            val rickAdmin = UserModel(
-                uid = "rick_admin_special_uid",
-                name = "Rick",
-                lastName = "Administrador",
-                email = "rick@gmail.com",
-                phone = "999888777",
-                role = Role.ADM.name,
-                acceptedTerms = true,
-                active = true
-            )
-            return Result.success(rickAdmin)
-        }
 
         return try {
             auth.signInWithEmailAndPassword(cleanEmail, password).await()
@@ -102,9 +79,6 @@ object FirebaseAuthManager {
             val uid = currentUid ?: throw Exception("No hay sesión iniciada")
             val email = (currentUserEmail ?: "").trim().lowercase()
 
-            // 1. Verificar si el correo pertenece a la lista de administradores autorizados
-            val isAdmin = email.isNotBlank() && AdminRepository.isAdminAuthorized(email)
-
             // 2. Intentar consultar documento en Firestore users/{uid}
             val doc = try {
                 firestore.collection(USERS).document(uid).get().await()
@@ -118,20 +92,13 @@ object FirebaseAuthManager {
                     auth.signOut()
                     throw Exception("Tu cuenta está desactivada")
                 }
-                val finalUser = if (isAdmin) existingUser.copy(uid = uid, role = Role.ADM.name)
-                else existingUser.copy(uid = uid)
-
-                if (isAdmin && existingUser.role != Role.ADM.name) {
-                    try {
-                        firestore.collection(USERS).document(uid).set(finalUser).await()
-                    } catch (_: Exception) {}
-                }
-
-                return Result.success(finalUser)
+                // El rol SOLO se toma de Firestore (users/{uid}.role)
+                return Result.success(existingUser.copy(uid = uid))
             }
 
             // 3. AUTO-REPARACIÓN: El documento no existe en Firestore (ej. usuario creado en consola o registro previo interrumpido)
-            val defaultRole = if (isAdmin) Role.ADM.name else Role.JUG.name
+            // Un perfil reparado nunca recibe rol ADM
+            val defaultRole = Role.JUG.name
             val defaultName = auth.currentUser?.displayName.orEmpty().ifBlank {
                 if (email.isNotBlank()) email.substringBefore("@").replaceFirstChar { it.uppercase() }
                 else "Usuario"
@@ -140,7 +107,7 @@ object FirebaseAuthManager {
             val healedUser = UserModel(
                 uid = uid,
                 name = defaultName,
-                lastName = if (isAdmin) "Administrador" else "Usuario",
+                lastName = "Usuario",
                 email = email,
                 role = defaultRole,
                 acceptedTerms = true,
