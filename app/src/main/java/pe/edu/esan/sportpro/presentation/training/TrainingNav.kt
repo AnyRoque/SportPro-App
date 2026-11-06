@@ -70,8 +70,9 @@ fun NavGraphBuilder.trainingGraph(sec: SecuredContext) {
         )
     ) { backStackEntry ->
         val trainingId = backStackEntry.arguments?.getString("trainingId") ?: ""
-        sec.Secured("Detalle de Entrenamiento", allowed = setOf(Role.DT, Role.JUG, Role.PAD), showBack = true) {
+        sec.Secured("Detalle de Entrenamiento", allowed = setOf(Role.DT, Role.JUG, Role.PAD), showBack = true) { user ->
             TrainingDetailScreen(
+                user = user,
                 trainingId = trainingId,
                 onBack = { sec.navController.popBackStack() }
             )

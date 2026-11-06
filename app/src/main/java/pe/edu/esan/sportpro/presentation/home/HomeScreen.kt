@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -22,13 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import pe.edu.esan.sportpro.R
 import pe.edu.esan.sportpro.data.model.Role
 import pe.edu.esan.sportpro.data.model.UserModel
 import pe.edu.esan.sportpro.presentation.navigation.Routes
-
-import androidx.compose.material.icons.filled.DateRange
 
 private data class Shortcut(val title: String, val subtitle: String, val route: String, val icon: ImageVector)
 
@@ -36,13 +38,32 @@ private data class Shortcut(val title: String, val subtitle: String, val route: 
 @Composable
 fun HomeScreen(user: UserModel, onNavigate: (String) -> Unit) {
     val trainingsShortcut = Shortcut("Entrenamientos", "Planifica y consulta las sesiones de entrenamiento", Routes.TRAININGS, Icons.Default.DateRange)
+    val matchesShortcut = Shortcut(
+        stringResource(R.string.home_matches_shortcut_title),
+        stringResource(R.string.home_matches_shortcut_subtitle),
+        Routes.MATCHES,
+        Icons.Default.Place
+    )
     val userAttendanceShortcut = Shortcut("Mi Asistencia", "Porcentaje de asistencia y desglose de sesiones", Routes.USER_ATTENDANCE_HISTORY, Icons.Default.CheckCircle)
 
     val shortcuts = when (user.roleEnum) {
         Role.ADM -> listOf(Shortcut("Validar equipos", "Aprueba o rechaza equipos registrados", Routes.TEAM_APPROVAL, Icons.Default.CheckCircle))
-        Role.DT -> listOf(Shortcut("Mis equipos", "Registra equipos y gestiona tu plantel", Routes.MY_TEAMS, Icons.AutoMirrored.Filled.List), trainingsShortcut)
-        Role.PAD -> listOf(Shortcut("Mis hijos", "Registra a tus hijos y vincúlalos a su equipo", Routes.MY_CHILDREN, Icons.Default.Face), trainingsShortcut, userAttendanceShortcut)
-        Role.JUG -> listOf(trainingsShortcut, userAttendanceShortcut)
+        Role.DT -> listOf(
+            Shortcut("Mis equipos", "Registra equipos y gestiona tu plantel", Routes.MY_TEAMS, Icons.AutoMirrored.Filled.List),
+            matchesShortcut,
+            trainingsShortcut
+        )
+        Role.PAD -> listOf(
+            Shortcut("Mis hijos", "Registra a tus hijos y vincúlalos a su equipo", Routes.MY_CHILDREN, Icons.Default.Face),
+            matchesShortcut,
+            trainingsShortcut,
+            userAttendanceShortcut
+        )
+        Role.JUG -> listOf(
+            matchesShortcut,
+            trainingsShortcut,
+            userAttendanceShortcut
+        )
         null -> emptyList()
     } + Shortcut("Mi perfil", "Tus datos de cuenta", Routes.PROFILE, Icons.Default.Person)
 
@@ -55,17 +76,13 @@ fun HomeScreen(user: UserModel, onNavigate: (String) -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(sc.icon, null, modifier = Modifier.size(32.dp))
+                    Icon(sc.icon, contentDescription = null, modifier = Modifier.size(32.dp))
                     Column(Modifier.padding(start = 16.dp)) {
                         Text(sc.title, style = MaterialTheme.typography.titleMedium)
                         Text(sc.subtitle, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
-        }
-        if (user.roleEnum == Role.JUG) {
-            Text("Pronto: convocatorias, asistencia y estadísticas.", style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline)
         }
     }
 }

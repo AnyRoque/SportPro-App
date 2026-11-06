@@ -35,15 +35,23 @@ import pe.edu.esan.sportpro.ui.theme.StatusApproved
 import pe.edu.esan.sportpro.ui.theme.StatusPending
 import pe.edu.esan.sportpro.ui.theme.StatusRejected
 
-/** Chip de color por estado: PENDIENTE / APROBADO / ACEPTADO / RECHAZADO / INACTIVO. */
+/** Chip de color por estado: PROGRAMADO / EN_CURSO / FINALIZADO / CANCELADO / APROBADO / RECHAZADO. */
 @Composable
 fun StatusChip(status: String) {
     val color = when (status) {
-        "APROBADO", "ACEPTADO", "ACTIVO" -> StatusApproved
-        "RECHAZADO", "INACTIVO" -> StatusRejected
+        "APROBADO", "ACEPTADO", "ACTIVO", "EN_CURSO" -> StatusApproved
+        "RECHAZADO", "INACTIVO", "CANCELADO" -> StatusRejected
+        "FINALIZADO", "TERMINADO" -> MaterialTheme.colorScheme.primary
+        "PROGRAMADO" -> StatusPending
         else -> StatusPending
     }
-    val label = status.lowercase().replaceFirstChar { it.uppercase() }
+    val label = when (status) {
+        "PROGRAMADO" -> "Programado"
+        "EN_CURSO" -> "En Curso"
+        "FINALIZADO" -> "Finalizado"
+        "CANCELADO" -> "Cancelado"
+        else -> status.lowercase().replaceFirstChar { it.uppercase() }
+    }
     Surface(color = color.copy(alpha = 0.15f), shape = RoundedCornerShape(50)) {
         Text(
             text = label,
@@ -128,7 +136,7 @@ fun ConfirmDialog(title: String, message: String, onConfirm: () -> Unit, onDismi
     )
 }
 
-/** Marcador temporal para rutas cuyo módulo aún no se integra (cada integrante lo reemplaza en su PR). */
+/** Marcador temporal para rutas cuyo módulo aún no se integra. */
 @Composable
 fun ComingSoon(feature: String) {
     Column(

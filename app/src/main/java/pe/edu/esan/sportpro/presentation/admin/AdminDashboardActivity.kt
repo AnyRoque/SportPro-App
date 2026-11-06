@@ -26,7 +26,9 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,16 +58,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import pe.edu.esan.sportpro.MainActivity
+import pe.edu.esan.sportpro.data.model.Role
+import pe.edu.esan.sportpro.data.model.UserModel
 import pe.edu.esan.sportpro.data.remote.FirebaseAuthManager
 import pe.edu.esan.sportpro.presentation.teams.TeamApprovalScreen
 import pe.edu.esan.sportpro.ui.theme.SportProTheme
 
 /**
- * Pantalla de Panel de Administración (US-06 / US-07).
- * Estructurada visualmente en 2 cuadrantes/botones principales:
- * 1. "Gestionar APP" (Módulo inactivo con aviso "Próximamente")
- * 2. "Agregar Administrador" (Abre el formulario para registrar un nuevo admin)
- * Y acceso directo a la Validación y Aprobación de Equipos Pendientes (US-07).
+ * Pantalla de Panel de Administración (US-06 / US-07 / US-20).
+ * Incluye gestión de administradores, validación de equipos y aprobación/rechazo de solicitudes de anulación de eventos enviadas por DTs rivales.
  */
 class AdminDashboardActivity : ComponentActivity() {
 
@@ -97,10 +98,11 @@ fun AdminDashboardContent(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var currentView by remember { mutableStateOf("DASHBOARD") } // "DASHBOARD", "ADD_ADMIN", "TEAM_APPROVAL"
+    var currentView by remember { mutableStateOf("DASHBOARD") } // "DASHBOARD", "ADD_ADMIN", "TEAM_APPROVAL", "EVENT_CANCELLATION"
 
     val adminEmail = FirebaseAuthManager.currentUserEmail ?: "michi@gmail.com"
     val adminUid = FirebaseAuthManager.currentUid ?: adminEmail
+    val adminUser = UserModel(uid = adminUid, name = "Administrador", email = adminEmail, role = Role.ADM.name)
 
     if (currentView == "ADD_ADMIN") {
         AddAdminScreen(
@@ -127,6 +129,28 @@ fun AdminDashboardContent(
         ) { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
                 TeamApprovalScreen(adminUid = adminUid)
+            }
+        }
+    } else if (currentView == "EVENT_CANCELLATION") {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Solicitudes de Anulación de Eventos") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = { currentView = "DASHBOARD" }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            Box(modifier = Modifier.padding(paddingValues)) {
+                EventCancellationApprovalScreen(adminUser = adminUser)
             }
         }
     } else {
@@ -231,7 +255,7 @@ fun AdminDashboardContent(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Módulo de Validación de Equipos (US-07)
                 OutlinedButton(
@@ -243,6 +267,20 @@ fun AdminDashboardContent(
                     Icon(Icons.Default.CheckCircle, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Validar Equipos Pendientes")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Módulo de Revisión de Anulación de Eventos de Partido (US-20)
+                Button(
+                    onClick = {
+                        currentView = "EVENT_CANCELLATION"
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.List, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Solicitudes de Anulación de Eventos")
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
