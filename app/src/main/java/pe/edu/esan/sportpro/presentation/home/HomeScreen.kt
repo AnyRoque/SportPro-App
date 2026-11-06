@@ -28,16 +28,21 @@ import pe.edu.esan.sportpro.data.model.Role
 import pe.edu.esan.sportpro.data.model.UserModel
 import pe.edu.esan.sportpro.presentation.navigation.Routes
 
+import androidx.compose.material.icons.filled.DateRange
+
 private data class Shortcut(val title: String, val subtitle: String, val route: String, val icon: ImageVector)
 
 /** Inicio según rol: accesos directos a las funciones autorizadas. */
 @Composable
 fun HomeScreen(user: UserModel, onNavigate: (String) -> Unit) {
+    val trainingsShortcut = Shortcut("Entrenamientos", "Planifica y consulta las sesiones de entrenamiento", Routes.TRAININGS, Icons.Default.DateRange)
+    val userAttendanceShortcut = Shortcut("Mi Asistencia", "Porcentaje de asistencia y desglose de sesiones", Routes.USER_ATTENDANCE_HISTORY, Icons.Default.CheckCircle)
+
     val shortcuts = when (user.roleEnum) {
         Role.ADM -> listOf(Shortcut("Validar equipos", "Aprueba o rechaza equipos registrados", Routes.TEAM_APPROVAL, Icons.Default.CheckCircle))
-        Role.DT -> listOf(Shortcut("Mis equipos", "Registra equipos y gestiona tu plantel", Routes.MY_TEAMS, Icons.AutoMirrored.Filled.List))
-        Role.PAD -> listOf(Shortcut("Mis hijos", "Registra a tus hijos y vincúlalos a su equipo", Routes.MY_CHILDREN, Icons.Default.Face))
-        Role.JUG -> emptyList()
+        Role.DT -> listOf(Shortcut("Mis equipos", "Registra equipos y gestiona tu plantel", Routes.MY_TEAMS, Icons.AutoMirrored.Filled.List), trainingsShortcut)
+        Role.PAD -> listOf(Shortcut("Mis hijos", "Registra a tus hijos y vincúlalos a su equipo", Routes.MY_CHILDREN, Icons.Default.Face), trainingsShortcut, userAttendanceShortcut)
+        Role.JUG -> listOf(trainingsShortcut, userAttendanceShortcut)
         null -> emptyList()
     } + Shortcut("Mi perfil", "Tus datos de cuenta", Routes.PROFILE, Icons.Default.Person)
 
