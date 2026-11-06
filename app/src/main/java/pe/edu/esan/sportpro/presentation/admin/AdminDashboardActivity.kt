@@ -100,7 +100,7 @@ fun AdminDashboardContent(
 
     var currentView by remember { mutableStateOf("DASHBOARD") } // "DASHBOARD", "ADD_ADMIN", "TEAM_APPROVAL", "EVENT_CANCELLATION"
 
-    val adminEmail = FirebaseAuthManager.currentUserEmail ?: "michi@gmail.com"
+    val adminEmail = FirebaseAuthManager.currentUserEmail.orEmpty()
     val adminUid = FirebaseAuthManager.currentUid ?: adminEmail
     val adminUser = UserModel(uid = adminUid, name = "Administrador", email = adminEmail, role = Role.ADM.name)
 

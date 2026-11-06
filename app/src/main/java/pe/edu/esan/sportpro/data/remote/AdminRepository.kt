@@ -15,12 +15,11 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Repositorio para la gestión dinámica de Administradores Autorizados.
- * Maneja la colección "Admins" (y "Administradores") en Cloud Firestore.
+ * Maneja la colección "Admins" (registro de auditoría) y el rol ADM en "users".
  */
 object AdminRepository {
 
     private const val ADMINS_COLLECTION = "Admins"
-    private const val ALT_ADMINS_COLLECTION = "Administradores"
     private const val USERS_COLLECTION = "users"
     private val firestore = FirebaseFirestore.getInstance()
 
@@ -31,107 +30,24 @@ object AdminRepository {
     )
 
     /**
-     * Verifica dinámicamente si un correo electrónico pertenece a la lista de administradores autorizados.
+     * Verifica si un correo ya pertenece a un administrador activo.
+     * La fuente de verdad del rol es users/{uid}.role == "ADM" (US-06).
      */
     suspend fun isAdminAuthorized(email: String): Boolean {
         val cleanEmail = email.trim().lowercase()
         if (cleanEmail.isBlank()) return false
-
-        // Manejo especial para cuentas iniciales/especiales de prueba
-        if (cleanEmail == "michi@gmail.com" || cleanEmail == "rick@gmail.com") {
-            withTimeoutOrNull(3000L) { ensureDefaultAdminSeeded(cleanEmail) }
-            return true
-        }
-
         return withTimeoutOrNull(4000L) {
             try {
-                // Consulta en la colección "Admins"
-                val queryAdmins = firestore.collection(ADMINS_COLLECTION)
-                    .whereEqualTo("email", cleanEmail)
-                    .get()
-                    .await()
-
-                if (!queryAdmins.isEmpty) {
-                    val adminDoc = queryAdmins.documents.first()
-                    val active = adminDoc.getBoolean("active") ?: true
-                    if (active) return@withTimeoutOrNull true
-                }
-
-                // Consulta de respaldo en la colección "Administradores"
-                val queryAltAdmins = firestore.collection(ALT_ADMINS_COLLECTION)
-                    .whereEqualTo("email", cleanEmail)
-                    .get()
-                    .await()
-
-                if (!queryAltAdmins.isEmpty) {
-                    val active = queryAltAdmins.documents.first().getBoolean("active") ?: true
-                    if (active) return@withTimeoutOrNull true
-                }
-
-                // Consulta secundaria en la colección "users" con rol ADM
-                val queryUsers = firestore.collection(USERS_COLLECTION)
+                !firestore.collection(USERS_COLLECTION)
                     .whereEqualTo("email", cleanEmail)
                     .whereEqualTo("role", Role.ADM.name)
                     .get()
                     .await()
-
-                !queryUsers.isEmpty
+                    .isEmpty
             } catch (_: Exception) {
                 false
             }
         } ?: false
-    }
-
-    /**
-     * Garantiza que la cuenta inicial de pruebas 'michi@gmail.com' esté registrada en la colección de administradores autorizados.
-     */
-    suspend fun ensureDefaultAdminSeeded(email: String) {
-        val cleanEmail = email.trim().lowercase()
-        try {
-            val docRef = firestore.collection(ADMINS_COLLECTION).document(cleanEmail)
-            val doc = docRef.get().await()
-
-            if (!doc.exists()) {
-                val adminName = if (cleanEmail.contains("rick")) "Rick" else "Michi"
-                val defaultAdmin = hashMapOf(
-                    "id" to cleanEmail,
-                    "name" to adminName,
-                    "lastName" to "Administrador",
-                    "email" to cleanEmail,
-                    "phone" to "999888777",
-                    "club" to "Club Deportivo SportPro",
-                    "role" to Role.ADM.name,
-                    "createdBy" to "SYSTEM_SEED",
-                    "createdAt" to currentTimestampString(),
-                    "active" to true
-                )
-                docRef.set(defaultAdmin).await()
-                // Duplicar en colección alternativa por compatibilidad
-                firestore.collection(ALT_ADMINS_COLLECTION).document(cleanEmail).set(defaultAdmin).await()
-            }
-
-            // Asegurar que exista perfil en la colección users si hay UID activo
-            val currentUid = FirebaseAuthManager.currentUid
-            if (currentUid != null) {
-                val userDocRef = firestore.collection(USERS_COLLECTION).document(currentUid)
-                val userDoc = userDocRef.get().await()
-                if (!userDoc.exists() || userDoc.getString("role") != Role.ADM.name) {
-                    val adminUser = UserModel(
-                        uid = currentUid,
-                        name = "Michi",
-                        lastName = "Administrador",
-                        email = cleanEmail,
-                        phone = "999888777",
-                        role = Role.ADM.name,
-                        acceptedTerms = true,
-                        active = true
-                    )
-                    userDocRef.set(adminUser).await()
-                }
-            }
-        } catch (_: Exception) {
-            // Ignorar errores menores en el seeding automático
-        }
     }
 
     /**
@@ -180,7 +96,7 @@ object AdminRepository {
             }
 
             val timestamp = currentTimestampString()
-            val docId = newUid ?: cleanEmail
+            val docId = newUid ?: throw Exception("No se pudo obtener el UID del nuevo administrador")
 
             val newAdminData = admin.copy(
                 id = docId,
@@ -193,12 +109,6 @@ object AdminRepository {
 
             // Registrar en colección "Admins"
             firestore.collection(ADMINS_COLLECTION)
-                .document(cleanEmail)
-                .set(newAdminData)
-                .await()
-
-            // Registrar en colección "Administradores" (copia de respaldo)
-            firestore.collection(ALT_ADMINS_COLLECTION)
                 .document(cleanEmail)
                 .set(newAdminData)
                 .await()
