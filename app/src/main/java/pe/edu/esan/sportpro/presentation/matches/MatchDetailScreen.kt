@@ -60,6 +60,7 @@ fun MatchDetailScreen(
     onNavigateLineup: () -> Unit = {},
     onNavigateConsole: () -> Unit = {},
     onNavigateLive: () -> Unit = {},
+    onNavigateSummary: () -> Unit = {},
     onBack: () -> Unit
 ) {
     var match by remember { mutableStateOf<MatchModel?>(null) }
@@ -196,6 +197,14 @@ fun MatchDetailScreen(
                             ) {
                                 Text(stringResource(R.string.console_title))
                             }
+                        }
+                    }
+
+                    // US-25 / US-27: Resumen narrativo con IA (solo partidos finalizados)
+                    if (m.status == MatchStatus.FINISHED) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(onClick = onNavigateSummary, modifier = Modifier.fillMaxWidth()) {
+                            Text("Resumen del partido (IA)")
                         }
                     }
                 }

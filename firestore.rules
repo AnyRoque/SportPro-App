@@ -60,6 +60,53 @@ service cloud.firestore {
       }
     }
 
+    // ---------- Anuncios (US-22) ----------
+    match /announcements/{id} {
+      allow read: if signedIn();
+      allow create: if (isAdmin() || isDt()) && request.resource.data.authorUid == request.auth.uid;
+      // El autor edita; cualquiera con sesión solo puede marcarlo como leído
+      allow update: if (signedIn() && resource.data.authorUid == request.auth.uid)
+                    || isAdmin()
+                    || (signedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']));
+      allow delete: if (signedIn() && resource.data.authorUid == request.auth.uid) || isAdmin();
+    }
+
+    // ---------- Comunidad (US-23) y moderación (US-24) ----------
+    match /posts/{postId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.authorUid == request.auth.uid
+                    && request.resource.data.status == 'VISIBLE';
+      allow update: if isAdmin()
+                    // El autor puede eliminar (marcar ELIMINADO) su publicación
+                    || (signedIn() && resource.data.authorUid == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reactions', 'commentCount', 'reportCount']))
+                    // Los demás: reaccionar, comentar, reportar (3 reportes la ocultan)
+                    || (signedIn()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'commentCount', 'reportCount', 'status'])
+                        && (request.resource.data.status == resource.data.status || request.resource.data.status == 'OCULTO'));
+      allow delete: if false;   // nunca se borran físicamente
+      match /comments/{commentId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.authorUid == request.auth.uid;
+        allow delete: if (signedIn() && resource.data.authorUid == request.auth.uid) || isAdmin();
+        allow update: if false;
+      }
+    }
+    match /reports/{reportId} {
+      allow create: if signedIn() && request.resource.data.reporterUid == request.auth.uid;
+      // get de un id inexistente (para evitar doble reporte) también se permite
+      allow read: if isAdmin() || (signedIn() && (resource == null || resource.data.reporterUid == request.auth.uid));
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ---------- Resumen IA del partido (US-25 a US-27) ----------
+    match /summaries/{matchId} {
+      allow read: if signedIn();
+      allow create, update: if isDt();
+      allow delete: if false;
+    }
+
     // ---------- Jugadores, entrenamientos y notificaciones ----------
     // Requieren sesión. Pendiente: restringir por rol en la siguiente iteración.
     match /{col}/{docId=**} {

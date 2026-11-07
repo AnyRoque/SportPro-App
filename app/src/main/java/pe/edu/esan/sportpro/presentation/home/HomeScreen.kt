@@ -13,6 +13,9 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
@@ -44,6 +47,9 @@ fun HomeScreen(user: UserModel, onNavigate: (String) -> Unit) {
         Routes.MATCHES,
         Icons.Default.Place
     )
+    val announcementsShortcut = Shortcut("Anuncios", "Avisos del equipo y de la academia", Routes.ANNOUNCEMENTS, Icons.Default.Notifications)
+    val communityShortcut = Shortcut("Comunidad", "Publicaciones de tu equipo y la academia", Routes.COMMUNITY, Icons.Default.Favorite)
+    val summariesShortcut = Shortcut("Resúmenes de partidos", "Crónicas generadas con IA y revisadas por el DT", Routes.SUMMARIES, Icons.Default.Star)
     val userAttendanceShortcut = Shortcut("Mi Asistencia", "Porcentaje de asistencia y desglose de sesiones", Routes.USER_ATTENDANCE_HISTORY, Icons.Default.CheckCircle)
 
     val shortcuts = when (user.roleEnum) {
@@ -51,18 +57,27 @@ fun HomeScreen(user: UserModel, onNavigate: (String) -> Unit) {
         Role.DT -> listOf(
             Shortcut("Mis equipos", "Registra equipos y gestiona tu plantel", Routes.MY_TEAMS, Icons.AutoMirrored.Filled.List),
             matchesShortcut,
-            trainingsShortcut
+            trainingsShortcut,
+            announcementsShortcut,
+            communityShortcut,
+            summariesShortcut
         )
         Role.PAD -> listOf(
             Shortcut("Mis hijos", "Registra a tus hijos y vincúlalos a su equipo", Routes.MY_CHILDREN, Icons.Default.Face),
             matchesShortcut,
             trainingsShortcut,
-            userAttendanceShortcut
+            userAttendanceShortcut,
+            announcementsShortcut,
+            communityShortcut,
+            summariesShortcut
         )
         Role.JUG -> listOf(
             matchesShortcut,
             trainingsShortcut,
-            userAttendanceShortcut
+            userAttendanceShortcut,
+            announcementsShortcut,
+            communityShortcut,
+            summariesShortcut
         )
         null -> emptyList()
     } + Shortcut("Mi perfil", "Tus datos de cuenta", Routes.PROFILE, Icons.Default.Person)

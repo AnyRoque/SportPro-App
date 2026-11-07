@@ -61,6 +61,8 @@ import pe.edu.esan.sportpro.MainActivity
 import pe.edu.esan.sportpro.data.model.Role
 import pe.edu.esan.sportpro.data.model.UserModel
 import pe.edu.esan.sportpro.data.remote.FirebaseAuthManager
+import pe.edu.esan.sportpro.presentation.community.AnnouncementFormScreen
+import pe.edu.esan.sportpro.presentation.community.AnnouncementsScreen
 import pe.edu.esan.sportpro.presentation.teams.TeamApprovalScreen
 import pe.edu.esan.sportpro.ui.theme.SportProTheme
 
@@ -104,7 +106,52 @@ fun AdminDashboardContent(
     val adminUid = FirebaseAuthManager.currentUid ?: adminEmail
     val adminUser = UserModel(uid = adminUid, name = "Administrador", email = adminEmail, role = Role.ADM.name)
 
-    if (currentView == "ADD_ADMIN") {
+    var announcementEditId by remember { mutableStateOf<String?>(null) }
+    var formNonce by remember { mutableStateOf(0) }
+
+    @Composable
+    fun SubScreen(title: String, back: String, content: @Composable () -> Unit) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(title) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = { currentView = back }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        }
+                    }
+                )
+            }
+        ) { paddingValues -> Box(modifier = Modifier.padding(paddingValues)) { content() } }
+    }
+
+    if (currentView == "MODERATION") {
+        // US-24: Moderación de publicaciones reportadas
+        SubScreen("Moderación de comunidad", "DASHBOARD") { ModerationScreen(adminUid = adminUid) }
+    } else if (currentView == "ANNOUNCEMENTS") {
+        // US-22: Anuncios (el ADM puede publicar a toda la academia)
+        SubScreen("Anuncios", "DASHBOARD") {
+            AnnouncementsScreen(
+                user = adminUser,
+                onNew = { announcementEditId = null; formNonce++; currentView = "ANNOUNCEMENT_FORM" },
+                onEdit = { a -> announcementEditId = a.id; formNonce++; currentView = "ANNOUNCEMENT_FORM" }
+            )
+        }
+    } else if (currentView == "ANNOUNCEMENT_FORM") {
+        SubScreen(if (announcementEditId == null) "Nuevo anuncio" else "Editar anuncio", "ANNOUNCEMENTS") {
+            AnnouncementFormScreen(
+                user = adminUser,
+                editId = announcementEditId,
+                onDone = { currentView = "ANNOUNCEMENTS" },
+                viewModel = androidx.lifecycle.viewmodel.compose.viewModel(key = "ann_form_$formNonce")
+            )
+        }
+    } else if (currentView == "ADD_ADMIN") {
         AddAdminScreen(
             creatorEmail = adminEmail,
             onBack = { currentView = "DASHBOARD" }
@@ -281,6 +328,18 @@ fun AdminDashboardContent(
                     Icon(Icons.Default.List, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Solicitudes de Anulación de Eventos")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Comunicación (US-22 / US-24)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { currentView = "ANNOUNCEMENTS" }, modifier = Modifier.weight(1f)) {
+                        Text("Anuncios")
+                    }
+                    OutlinedButton(onClick = { currentView = "MODERATION" }, modifier = Modifier.weight(1f)) {
+                        Text("Moderación")
+                    }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
