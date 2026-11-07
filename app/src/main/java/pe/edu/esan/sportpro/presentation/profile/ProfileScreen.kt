@@ -1,5 +1,7 @@
-package pe.edu.esan.sportpro.presentation.profile
+﻿package pe.edu.esan.sportpro.presentation.profile
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,20 +18,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import pe.edu.esan.sportpro.data.model.UserModel
 
-/** Perfil de la cuenta y cierre de sesión (US-01). */
+/** Perfil de la cuenta y cierre de sesiÃƒÆ’Ã‚Â³n (US-01). */
 @Composable
 fun ProfileScreen(user: UserModel, onLogout: () -> Unit) {
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(user.fullName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Field("Rol", user.roleEnum?.label ?: user.role)
                 Field("Correo", user.email)
-                Field("Teléfono", user.phone)
+                Field("TelÃƒÆ’Ã‚Â©fono", user.phone)
                 if (user.birthDate.isNotBlank()) Field("Fecha de nacimiento", user.birthDate)
             }
         }
-        OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Cerrar sesión") }
+        if (user.roleEnum == pe.edu.esan.sportpro.data.model.Role.JUG) {
+    PlayerPhotoSection(user.uid)
+    PlayerSportsSection(user.uid)
+    PlayerEditSection(user.uid)
+}
+        OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Cerrar sesiÃƒÆ’Ã‚Â³n") }
     }
 }
 
@@ -40,3 +47,4 @@ private fun Field(label: String, value: String) {
         Text(value)
     }
 }
+
