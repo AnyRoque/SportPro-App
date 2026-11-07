@@ -10,6 +10,9 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
@@ -49,11 +52,14 @@ private fun drawerItemsFor(role: Role?): List<DrawerItem> {
     val trainings = DrawerItem("Entrenamientos", Routes.TRAININGS, Icons.Default.DateRange)
     val matches = DrawerItem("Partidos", Routes.MATCHES, Icons.Default.Place)
     val myAttendance = DrawerItem("Mi asistencia", Routes.USER_ATTENDANCE_HISTORY, Icons.Default.CheckCircle)
+    val announcements = DrawerItem("Anuncios", Routes.ANNOUNCEMENTS, Icons.Default.Notifications)
+    val community = DrawerItem("Comunidad", Routes.COMMUNITY, Icons.Default.Favorite)
+    val summaries = DrawerItem("Resúmenes", Routes.SUMMARIES, Icons.Default.Star)
     return when (role) {
         Role.ADM -> listOf(home, DrawerItem("Validar equipos", Routes.TEAM_APPROVAL, Icons.Default.CheckCircle), profile)
-        Role.DT -> listOf(home, DrawerItem("Mis equipos", Routes.MY_TEAMS, Icons.AutoMirrored.Filled.List), trainings, matches, profile)
-        Role.PAD -> listOf(home, DrawerItem("Mis hijos", Routes.MY_CHILDREN, Icons.Default.Face), trainings, matches, myAttendance, profile)
-        Role.JUG -> listOf(home, trainings, matches, myAttendance, profile)
+        Role.DT -> listOf(home, DrawerItem("Mis equipos", Routes.MY_TEAMS, Icons.AutoMirrored.Filled.List), trainings, matches, announcements, community, summaries, profile)
+        Role.PAD -> listOf(home, DrawerItem("Mis hijos", Routes.MY_CHILDREN, Icons.Default.Face), trainings, matches, myAttendance, announcements, community, summaries, profile)
+        Role.JUG -> listOf(home, trainings, matches, myAttendance, announcements, community, summaries, profile)
         null -> listOf(home)
     }
 }

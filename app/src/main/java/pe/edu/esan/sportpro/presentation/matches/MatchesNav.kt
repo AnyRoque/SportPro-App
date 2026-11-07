@@ -96,6 +96,9 @@ fun NavGraphBuilder.matchesGraph(sec: SecuredContext) {
                 onNavigateLive = {
                     sec.navController.navigate(Routes.liveMatch(matchId))
                 },
+                onNavigateSummary = {
+                    sec.navController.navigate(Routes.matchSummary(matchId))
+                },
                 onBack = { sec.navController.popBackStack() }
             )
         }

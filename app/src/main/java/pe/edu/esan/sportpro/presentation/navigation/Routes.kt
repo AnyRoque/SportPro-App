@@ -77,5 +77,17 @@ object Routes {
     const val LIVE_MATCH = "live_match/{matchId}"
     fun liveMatch(matchId: String) = "live_match/$matchId"
 
+    // Comunicación e IA (US-22 a US-27)
+    const val ANNOUNCEMENTS = "announcements"
+    const val ANNOUNCEMENT_FORM = "announcement_form?editId={editId}"
+    fun announcementForm(editId: String? = null) = if (editId == null) "announcement_form" else "announcement_form?editId=$editId"
+    const val COMMUNITY = "community"
+    const val CREATE_POST = "create_post"
+    const val POST_DETAIL = "post_detail/{postId}"
+    fun postDetail(postId: String) = "post_detail/$postId"
+    const val SUMMARIES = "summaries"
+    const val MATCH_SUMMARY = "match_summary/{matchId}"
+    fun matchSummary(matchId: String) = "match_summary/$matchId"
+
     val authRoutes = setOf(SPLASH, LOGIN, REGISTER, FORGOT_PASSWORD)
 }
